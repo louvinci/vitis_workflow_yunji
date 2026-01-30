@@ -76,8 +76,30 @@ XCLMGMT              : 2.14.384, 090bb050d570d2b668477c3bd0f979dc3a34b9db
 
 2. 编写配置文件
    - 如上图，在 Transformer_system_hw_link 目录创建 `setting.cfg`。
-   - 编写 kernel 端口映射规则`[connecticity]`，vivado 配置参数 `[vivado]`。具体规则见 [UG1393](https://docs.amd.com/r/2022.2-%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87/ug1393-vitis-application-acceleration/v-%E5%91%BD%E4%BB%A4)。
+   - 编写 kernel 端口映射规则`[connecticity]`，vivado 配置参数 `[vivado]`。这一步是为了将内核端口映射到存储器。
+     具体规则见 [UG1393](https://docs.amd.com/r/2022.2-%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87/ug1393-vitis-application-acceleration/v-%E5%91%BD%E4%BB%A4)。
     ![fig.10 setting_cfg](./img/cfg.png)
+   - UG1293 中``将内核端口映射到存储器``的简单示例，有关**将计算单元分配给-SLR**也是类似配置
+   ```
+   void cnn( int *pixel, // Input pixel
+             int *weights, // Input Weight Matrix
+             int *out, // Output pixel
+              ... // Other input or Output ports
+      #pragma HLS INTERFACE m_axi port=pixel offset=slave bundle=gmem
+      #pragma HLS INTERFACE m_axi port=weights offset=slave bundle=gmem1
+      #pragma HLS INTERFACE m_axi port=out offset=slave bundle=gmem
+   ```
+  在以上示例中，为存储器接口输入 pixel 和 weights 分配不同的捆绑包名称，而 out 则与 pixel 捆绑在一起。这样即可创建 2 个独立的接口端口：gmem 和 gmem1。
+  !!! 必须使用全小写字符来指定 bundle= 名称，这样才能使用 --connectivity.sp 选项将其分配给特定存储体。
+  ```
+      [connectivity]
+      #sp=<compute_unit_name>.<argument>:<bank name> 
+      sp=cnn_1.pixel:DDR[0]          
+      sp=cnn_1.weights:DDR[1]
+      sp=cnn_1.out:DDR[0]
+  ```
+  对于含 4 个 DDR 存储体的平台，<bank_name> 表示为 DDR[0]、DDR[1]、DDR[2] 和 DDR[3]。您还可将存储器指定为连续范围内的存储体，例如 DDR[0:2]，在此情况下，XRT 将在运行时分配该存储体
+  
    > [vivado] 选项指定 vivado 运行配置，这里设置了 implementation 策略。
 
 3. 设置硬件实现配置
