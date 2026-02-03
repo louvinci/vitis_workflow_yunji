@@ -13,7 +13,7 @@
 
 - 其他HLS学习资料:arrow_right:不建议阅读了
 https://rec.ustc.edu.cn/share/690b5610-8cac-11ef-be09-8fe3c6ad0641  内部学习hls的视频。自己可以观看学习，请勿外传
-
+![HLS(C+pragma)作用示意图](./img/HLS.png "HLS示意图")
 ---
 ### 2、Vitis/Vivado部署工具学习
 建议学习顺序：
